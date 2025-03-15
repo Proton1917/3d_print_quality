@@ -1,0 +1,72 @@
+# 默认配置文件 - 3D打印质量评估
+
+# 数据配置
+data:
+  raw_dir: "data/raw"  # 原始图像目录
+  processed_dir: "data/processed"  # 处理后图像目录
+  metadata_file: "data/metadata.csv"  # 元数据文件
+  train_ratio: 0.7  # 训练集比例
+  val_ratio: 0.15  # 验证集比例
+  test_ratio: 0.15  # 测试集比例
+
+# 预处理配置
+preprocessing:
+  target_size: 224  # 目标图像大小
+  denoise: true  # 是否去噪
+  denoise_strength: 10  # 去噪强度
+  auto_roi: true  # 自动提取ROI
+  crop_ratio: 0.9  # 裁剪比例
+
+# 数据增强配置
+augmentations:
+  enabled: true  # 是否启用数据增强
+  copies: 2  # 每个原始图像生成的增强副本数量
+  rotation: true  # 旋转
+  flip: true  # 翻转
+  brightness: true  # 亮度调整
+  noise: true  # 添加噪声
+  blur: false  # 模糊
+
+# 模型配置
+model:
+  backbone: "resnet50"  # 主干网络 (resnet50, efficientnet_b0, vit_base_patch16_224)
+  pretrained: true  # 是否使用预训练权重
+  use_attention: true  # 是否使用注意力机制
+  dropout: 0.3  # Dropout率
+  num_quality_classes: 4  # 质量分类数量 (优/良/中/差)
+  num_parameters: 3  # 参数回归数量 (层高，曝光时间，光强)
+  num_defect_types: 5  # 缺陷类型数量
+
+# 训练配置
+training:
+  output_dir: "output"  # 输出目录
+  seed: 42  # 随机种子
+  num_epochs: 100  # 训练轮数
+  batch_size: 32  # 批量大小
+  num_workers: 4  # 数据加载器工作线程数
+  learning_rate: 0.0003  # 初始学习率
+  weight_decay: 0.01  # 权重衰减
+  quality_loss_weight: 1.0  # 质量分类损失权重
+  parameter_loss_weight: 0.5  # 参数回归损失权重
+  defect_loss_weight: 0.3  # 缺陷检测损失权重
+  mixed_precision: true  # 是否使用混合精度训练
+  checkpoint_interval: 5  # 检查点保存间隔（轮数）
+  viz_interval: 2  # 可视化间隔（轮数）
+  device: "auto"  # 训练设备 (auto, cuda, mps, cpu)
+  
+# 评估配置
+evaluation:
+  threshold: 0.5  # 缺陷检测阈值
+  metrics: ["accuracy", "f1", "precision", "recall", "confusion_matrix", "mae", "mse", "r2"]
+
+# 测试时间增强配置
+tta:
+  enabled: false  # 是否启用测试时间增强
+  flips: true  # 翻转
+  rotations: true  # 旋转
+
+# 最优打印参数 (用于计算偏差)
+optimal_parameters:
+  layer_height: 0.05  # 最优层高 (mm)
+  exposure_time: 8.0  # 最优曝光时间 (s)
+  light_intensity: 50.0  # 最优光强 (%)
