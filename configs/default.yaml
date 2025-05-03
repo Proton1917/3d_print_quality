@@ -1,0 +1,67 @@
+# 3D打印质量评估模型配置
+
+# 数据配置
+data:
+  metadata_path: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/metadata.csv"
+  raw_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/raw"
+  processed_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/processed"
+  labeled_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/labeled"
+  image_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/processed"
+  batch_size: 32
+  num_workers: 4
+  val_split: 0.15
+  test_split: 0.15
+  target_size: [224, 224]
+
+# 预处理配置
+preprocessing:
+  target_size: [224, 224]
+  denoise: true
+  normalize: true
+  roi_method: "adaptive"  # 'fixed' 或 'adaptive'
+
+# 模型配置
+model:
+  backbone_type: "resnet"  # 'resnet' 或 'vit'
+  backbone_name: "resnet50"  # 对应的模型名称
+  pretrained: true
+  freeze_layers: true
+  use_attention: true
+  num_classes: 4  # 质量等级分类
+  num_params: 4   # 回归参数数量
+  num_defect_types: 5  # 缺陷类型数量
+
+# 训练配置
+optimizer:
+  name: "adamw"
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  momentum: 0.9  # 仅适用于SGD
+
+scheduler:
+  name: "cosine"  # 'steplr', 'cosine' 或 'plateau'
+  step_size: 10   # 仅适用于StepLR
+  gamma: 0.1      # 仅适用于StepLR
+  t_max: 100      # 仅适用于CosineAnnealingLR
+  factor: 0.1     # 仅适用于ReduceLROnPlateau
+  patience: 5     # 仅适用于ReduceLROnPlateau
+
+loss:
+  name: "dynamic"  # 'multitask' 或 'dynamic'
+  task_weights:    # 仅适用于MultiTaskLoss
+    quality: 1.0
+    params: 0.8
+    defects: 1.0
+  temp: 2.0        # 仅适用于DynamicWeightAverageLoss
+
+# 通用训练参数
+num_epochs: 50
+checkpoint_path: ""  # 预训练模型路径，为空则从头训练
+output_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/models/checkpoints"
+use_gpu: true
+use_amp: true  # 使用混合精度训练
+gradient_clip: true
+gradient_clip_value: 1.0
+print_freq: 10
+save_freq: 5
+seed: 42
