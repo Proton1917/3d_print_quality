@@ -78,7 +78,7 @@ def evaluate_model(model, dataloader, device):
     defect_report = classification_report(defect_targets, defect_preds, output_dict=True)
     
     # 计算参数回归指标
-    param_mse = np.mean((param_preds - param_targets) ** 2, axis=0)
+    param_mse = np.mean((param_preds - param_targets)  2, axis=0)
     param_mae = np.mean(np.abs(param_preds - param_targets), axis=0)
     
     # 组合评估结果

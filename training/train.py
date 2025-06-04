@@ -306,7 +306,7 @@ class Trainer:
                 correct_defects += (predicted == targets['defect_type']).sum().item()
                 
                 # 参数回归MSE
-                params_mse += torch.mean((predictions['params'] - targets['params'])**2).item()
+                params_mse += torch.mean((predictions['params'] - targets['params'])2).item()
         
         # 计算平均损失
         epoch_loss = running_loss / len(dataloader)

@@ -23,7 +23,7 @@ class FocalLoss(nn.Module):
         """计算Focal Loss"""
         BCE_loss = F.cross_entropy(inputs, targets, reduction='none')
         pt = torch.exp(-BCE_loss)  # 预测概率
-        F_loss = self.alpha * (1-pt)**self.gamma * BCE_loss
+        F_loss = self.alpha * (1-pt)self.gamma * BCE_loss
         
         if self.reduction == 'mean':
             return torch.mean(F_loss)
@@ -144,7 +144,7 @@ class DynamicWeightAverageLoss(nn.Module):
             
         # 计算权重，损失越大权重越大
         weights = self.task_losses / self.task_losses.sum()
-        weights = weights ** self.temp
+        weights = weights  self.temp
         weights = weights / weights.sum()
         
         # 计算加权总损失

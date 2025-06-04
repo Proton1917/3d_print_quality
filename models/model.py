@@ -35,7 +35,7 @@ class PrintQualityModel(nn.Module):
         
         # 初始化骨干网络
         if backbone_type == 'resnet':
-            self.backbone = get_resnet_backbone(**backbone_config)
+            self.backbone = get_resnet_backbone(backbone_config)
             self.features_dim = self.backbone.features_dim
             
             # 对于ResNet，注意力模块插入到特征提取后
@@ -44,7 +44,7 @@ class PrintQualityModel(nn.Module):
                 self.reshape_features = True
                 self.attention = CBAM(in_channels=2048)
         else:  # vit
-            self.backbone = get_vit_backbone(**backbone_config)
+            self.backbone = get_vit_backbone(backbone_config)
             self.features_dim = self.backbone.features_dim
             self.reshape_features = False
             
