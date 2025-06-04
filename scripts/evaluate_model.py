@@ -13,6 +13,7 @@ import seaborn as sns
 from models.model import PrintQualityModel
 from training.dataloader import PrintQualityDataset
 from utils.visualization import plot_confusion_matrix
+from utils.device import get_device
 
 def evaluate_model(model, dataloader, device):
     """
@@ -78,7 +79,7 @@ def evaluate_model(model, dataloader, device):
     defect_report = classification_report(defect_targets, defect_preds, output_dict=True)
     
     # 计算参数回归指标
-    param_mse = np.mean((param_preds - param_targets)  2, axis=0)
+    param_mse = np.mean((param_preds - param_targets)**2, axis=0)
     param_mae = np.mean(np.abs(param_preds - param_targets), axis=0)
     
     # 组合评估结果
@@ -216,8 +217,7 @@ def main():
         config = yaml.safe_load(f)
     
     # 设置设备
-    device = torch.device('cuda:0' if torch.cuda.is_available() and config['use_gpu'] else 'cpu')
-    print(f"使用设备：{device}")
+    device = get_device(use_gpu=config.get('use_gpu', True))
     
     # 获取标签映射
     quality_labels = ['优', '良', '中', '差']

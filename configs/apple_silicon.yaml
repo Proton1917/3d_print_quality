@@ -1,0 +1,77 @@
+# 3D打印质量评估模型配置 - Apple Silicon优化版
+
+# 数据配置
+data:
+  metadata_path: "data/metadata.csv"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  labeled_dir: "data/labeled"
+  image_dir: "data/processed"
+  batch_size: 16  # Apple Silicon MPS推荐较小的batch size
+  num_workers: 2  # macOS上推荐较少的worker数量
+  val_split: 0.15
+  test_split: 0.15
+  target_size: [224, 224]
+
+# 预处理配置
+preprocessing:
+  target_size: [224, 224]
+  denoise: true
+  normalize: true
+  roi_method: "adaptive"  # 'fixed' 或 'adaptive'
+
+# 模型配置
+model:
+  backbone_type: "resnet"  # 'resnet' 或 'vit'
+  backbone_name: "resnet50"  # 对应的模型名称
+  pretrained: true
+  freeze_layers: true
+  use_attention: true
+  num_classes: 4  # 质量等级分类
+  num_params: 4   # 回归参数数量
+  num_defect_types: 5  # 缺陷类型数量
+
+# 训练配置
+optimizer:
+  name: "adamw"
+  learning_rate: 0.0008  # 稍微降低学习率以适应MPS
+  weight_decay: 0.0001
+  momentum: 0.9  # 仅适用于SGD
+
+scheduler:
+  name: "cosine"  # 'steplr', 'cosine' 或 'plateau'
+  step_size: 10   # 仅适用于StepLR
+  gamma: 0.1      # 仅适用于StepLR
+  t_max: 100      # 仅适用于CosineAnnealingLR
+  factor: 0.1     # 仅适用于ReduceLROnPlateau
+  patience: 5     # 仅适用于ReduceLROnPlateau
+  verbose: true   # 显示学习率变化
+
+loss:
+  name: "dynamic"  # 'multitask' 或 'dynamic'
+  task_weights:    # 仅适用于MultiTaskLoss
+    quality: 1.0
+    params: 0.8
+    defects: 1.0
+  temp: 2.0        # 仅适用于DynamicWeightAverageLoss
+
+# 通用训练参数
+num_epochs: 50
+checkpoint_path: ""  # 预训练模型路径，为空则从头训练
+output_dir: "models/checkpoints"
+use_gpu: true  # 启用GPU（将自动选择MPS或CUDA）
+use_amp: false  # MPS暂时禁用混合精度，可能存在兼容性问题
+gradient_clip: true
+gradient_clip_value: 1.0
+print_freq: 10
+save_freq: 5
+seed: 42
+
+# Apple Silicon特定设置
+apple_silicon:
+  # MPS可能在某些操作上有限制，这里记录一些注意事项
+  notes: |
+    - MPS可能不支持所有PyTorch操作
+    - 建议关闭混合精度训练(use_amp: false)
+    - 使用较小的批次大小以避免内存问题
+    - 某些复杂的注意力机制可能需要回退到CPU

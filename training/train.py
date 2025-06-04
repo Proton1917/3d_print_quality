@@ -6,12 +6,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard.writer import SummaryWriter
 from torch.cuda.amp import GradScaler, autocast
 
 from models.model import PrintQualityModel
 from training.dataloader import get_dataloaders
 from training.losses import MultiTaskLoss, DynamicWeightAverageLoss
+from utils.device import get_device, is_mps_device
 
 class Trainer:
     """模型训练器"""
@@ -48,20 +49,22 @@ class Trainer:
         self.dataloaders = self._get_dataloaders()
         
         # 初始化混合精度训练
-        self.scaler = GradScaler() if config['use_amp'] else None
+        # MPS设备可能不完全支持混合精度训练，需要检查
+        use_amp = config.get('use_amp', False)
+        if is_mps_device(self.device):
+            if use_amp:
+                print("警告：MPS设备可能不完全支持混合精度训练，建议设置use_amp=false")
+            # 为安全起见，在MPS上禁用混合精度
+            use_amp = False
+        
+        self.scaler = GradScaler() if use_amp else None
         
         # 最佳模型指标
         self.best_metric = float('inf')
         
     def _get_device(self):
         """获取训练设备"""
-        if torch.cuda.is_available() and self.config['use_gpu']:
-            device = torch.device('cuda:0')
-            print(f"使用GPU：{torch.cuda.get_device_name(0)}")
-        else:
-            device = torch.device('cpu')
-            print("使用CPU")
-        return device
+        return get_device(use_gpu=self.config.get('use_gpu', True))
     
     def _create_model(self):
         """创建模型"""
@@ -131,7 +134,7 @@ class Trainer:
                 mode='min',
                 factor=sched_config['factor'],
                 patience=sched_config['patience'],
-                verbose=True
+                verbose=sched_config.get('verbose', True)
             )
         else:
             raise ValueError(f"不支持的调度器：{sched_config['name']}")
@@ -183,7 +186,7 @@ class Trainer:
             # 清零梯度
             self.optimizer.zero_grad()
             
-            if self.config['use_amp']:
+            if self.config.get('use_amp', False) and self.scaler is not None and not is_mps_device(self.device):
                 # 混合精度训练
                 with autocast():
                     # 前向传播
@@ -306,7 +309,7 @@ class Trainer:
                 correct_defects += (predicted == targets['defect_type']).sum().item()
                 
                 # 参数回归MSE
-                params_mse += torch.mean((predictions['params'] - targets['params'])2).item()
+                params_mse += torch.mean((predictions['params'] - targets['params'])**2).item()
         
         # 计算平均损失
         epoch_loss = running_loss / len(dataloader)

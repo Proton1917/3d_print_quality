@@ -14,6 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from models.model import PrintQualityModel
 from utils.visualization import plot_prediction_heatmap, visualize_attention_weights
+from utils.device import get_device
 
 class PrintQualityInference:
     """3D打印质量评估推理类"""
@@ -40,7 +41,7 @@ class PrintQualityInference:
         
         # 设置设备
         if device is None:
-            self.device = torch.device('cuda:0' if torch.cuda.is_available() and self.config['use_gpu'] else 'cpu')
+            self.device = get_device(use_gpu=self.config.get('use_gpu', True))
         else:
             self.device = device
         
@@ -104,7 +105,9 @@ class PrintQualityInference:
         image = Image.open(image_path).convert('RGB')
         
         # 应用转换
-        image_tensor = self.transform(image).unsqueeze(0).to(self.device)
+        image_tensor = self.transform(image)
+        if isinstance(image_tensor, torch.Tensor):
+            image_tensor = image_tensor.unsqueeze(0).to(self.device)
         
         return image_tensor, image
     
@@ -130,10 +133,11 @@ class PrintQualityInference:
         quality_probs = torch.softmax(predictions['quality'], dim=1)
         quality_scores, quality_class = torch.max(quality_probs, dim=1)
         
+        quality_class_idx = int(quality_class.item())
         quality_result = {
-            'class_id': quality_class.item(),
-            'class_name': self.quality_labels[quality_class.item()],
-            'confidence': quality_scores.item(),
+            'class_id': quality_class_idx,
+            'class_name': self.quality_labels[quality_class_idx],
+            'confidence': float(quality_scores.item()),
             'probabilities': quality_probs[0].cpu().numpy().tolist()
         }
         
@@ -141,10 +145,11 @@ class PrintQualityInference:
         defect_probs = torch.softmax(predictions['defects'], dim=1)
         defect_scores, defect_class = torch.max(defect_probs, dim=1)
         
+        defect_class_idx = int(defect_class.item())
         defect_result = {
-            'class_id': defect_class.item(),
-            'class_name': self.defect_labels[defect_class.item()],
-            'confidence': defect_scores.item(),
+            'class_id': defect_class_idx,
+            'class_name': self.defect_labels[defect_class_idx],
+            'confidence': float(defect_scores.item()),
             'probabilities': defect_probs[0].cpu().numpy().tolist()
         }
         
