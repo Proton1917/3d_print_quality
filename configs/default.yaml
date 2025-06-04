@@ -2,11 +2,11 @@
 
 # 数据配置
 data:
-  metadata_path: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/metadata.csv"
-  raw_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/raw"
-  processed_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/processed"
-  labeled_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/labeled"
-  image_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/data/processed"
+  metadata_path: "data/metadata.csv"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  labeled_dir: "data/labeled"
+  image_dir: "data/processed"
   batch_size: 32
   num_workers: 4
   val_split: 0.15
@@ -57,7 +57,7 @@ loss:
 # 通用训练参数
 num_epochs: 50
 checkpoint_path: ""  # 预训练模型路径，为空则从头训练
-output_dir: "/Users/gordongauerk/Desktop/计算机软件开发/Neutron的机器学习/3d_print_quality/workplace/models/checkpoints"
+output_dir: "models/checkpoints"
 use_gpu: true
 use_amp: true  # 使用混合精度训练
 gradient_clip: true
