@@ -317,7 +317,7 @@ class Trainer:
         
         # 计算指标
         quality_acc = 100 * correct_quality / total_quality
-        defects_acc = 100 * correct_defects / total_defects
+        defect_acc = 100 * correct_defects / total_defects
         params_mse /= len(dataloader)
         
         # 记录tensorboard
@@ -325,16 +325,16 @@ class Trainer:
         for task, loss_val in epoch_task_losses.items():
             self.writer.add_scalar(f'TaskLoss/val/{task}', loss_val, epoch)
         self.writer.add_scalar('Accuracy/quality', quality_acc, epoch)
-        self.writer.add_scalar('Accuracy/defects', defects_acc, epoch)
+        self.writer.add_scalar('Accuracy/defects', defect_acc, epoch)
         self.writer.add_scalar('MSE/params', params_mse, epoch)
         
         print(f"Validation: "
               f"Loss: {epoch_loss:.4f} "
               f"Quality Acc: {quality_acc:.2f}% "
-              f"Defects Acc: {defects_acc:.2f}% "
+              f"Defects Acc: {defect_acc:.2f}% "
               f"Params MSE: {params_mse:.6f}")
         
-        return epoch_loss, quality_acc, defects_acc, params_mse
+        return epoch_loss, quality_acc, defect_acc, params_mse
     
     def train(self):
         """训练模型"""
@@ -345,7 +345,7 @@ class Trainer:
             train_loss = self.train_one_epoch(epoch)
             
             # 验证
-            val_loss, quality_acc, defects_acc, params_mse = self.validate(epoch)
+            val_loss, quality_acc, defect_acc, params_mse = self.validate(epoch)
             
             # 更新学习率
             if isinstance(self.scheduler, optim.lr_scheduler.ReduceLROnPlateau):
@@ -366,7 +366,7 @@ class Trainer:
                     metrics={
                         'val_loss': val_loss,
                         'quality_acc': quality_acc,
-                        'defects_acc': defects_acc,
+                        'defect_acc': defect_acc,
                         'params_mse': params_mse
                     }
                 )
@@ -379,7 +379,7 @@ class Trainer:
                     metrics={
                         'val_loss': val_loss,
                         'quality_acc': quality_acc,
-                        'defects_acc': defects_acc,
+                        'defect_acc': defect_acc,
                         'params_mse': params_mse
                     }
                 )

@@ -15,7 +15,8 @@ def main():
     args = parser.parse_args()
     
     # 调用训练模块的主函数
-    train_main([f"--config={args.config}"])
+    sys.argv = ['train.py', f'--config={args.config}']
+    train_main()
 
 if __name__ == '__main__':
     main()
