@@ -35,23 +35,53 @@ class PrintQualityModel(nn.Module):
         
         # 初始化骨干网络
         if backbone_type == 'resnet':
-            self.backbone = get_resnet_backbone(backbone_config)
+            # 期望的配置键：model_name, pretrained, freeze_layers
+            model_name = backbone_config.get('model_name', 'resnet50')
+            pretrained = backbone_config.get('pretrained', True)
+            freeze_layers = backbone_config.get('freeze_layers', True)
+
+            self.backbone = get_resnet_backbone(
+                model_name=model_name,
+                pretrained=pretrained,
+                freeze_layers=freeze_layers,
+            )
             self.features_dim = self.backbone.features_dim
-            
+
             # 对于ResNet，注意力模块插入到特征提取后
             if use_attention:
                 # 假设ResNet最后输出是2048维特征，需要将其重塑为特征图形式以便CBAM处理
                 self.reshape_features = True
-                self.attention = CBAM(in_channels=2048)
+                # 根据不同ResNet变体自动推断通道数
+                in_channels = self.features_dim
+                self.attention = CBAM(in_channels=in_channels)
         else:  # vit
-            self.backbone = get_vit_backbone(backbone_config)
+            # 允许通过backbone_name进行简单映射（默认vit_base_patch16_224）
+            name = backbone_config.get('model_name', 'vit_base_patch16_224')
+            pretrained = backbone_config.get('pretrained', True)
+            freeze_layers = backbone_config.get('freeze_layers', True)
+
+            vit_cfg = {
+                'vit_base_patch16_224': dict(img_size=224, patch_size=16, embed_dim=768, depth=12, num_heads=12),
+                'vit_small_patch16_224': dict(img_size=224, patch_size=16, embed_dim=384, depth=12, num_heads=6),
+                'vit_tiny_patch16_224':  dict(img_size=224, patch_size=16, embed_dim=192, depth=12, num_heads=3),
+            }.get(name, dict(img_size=224, patch_size=16, embed_dim=768, depth=12, num_heads=12))
+
+            self.backbone = get_vit_backbone(
+                img_size=vit_cfg['img_size'],
+                patch_size=vit_cfg['patch_size'],
+                embed_dim=vit_cfg['embed_dim'],
+                num_heads=vit_cfg['num_heads'],
+                depth=vit_cfg['depth'],
+                pretrained=pretrained,
+                freeze_layers=freeze_layers,
+            )
             self.features_dim = self.backbone.features_dim
             self.reshape_features = False
-            
+
             # 对于ViT，我们使用不同形式的注意力机制
             if use_attention:
                 self.attention = nn.MultiheadAttention(
-                    embed_dim=self.features_dim, 
+                    embed_dim=self.features_dim,
                     num_heads=8,
                     dropout=0.1
                 )
@@ -73,7 +103,7 @@ class PrintQualityModel(nn.Module):
             if self.reshape_features:
                 # 将特征重塑为特征图形式，假设批大小为B
                 B = features.shape[0]
-                features_map = features.view(B, 2048, 1, 1)  # 假设ResNet特征维度为2048
+                features_map = features.view(B, self.features_dim, 1, 1)
                 features_map = self.attention(features_map)
                 features = features_map.view(B, -1)
             else:

@@ -1,0 +1,59 @@
+checkpoint_path: ''
+data:
+  batch_size: 4
+  image_dir: data/processed
+  labeled_dir: data/labeled
+  metadata_path: data/metadata.csv
+  num_workers: 0
+  processed_dir: data/processed
+  raw_dir: data/raw
+  target_size:
+  - 224
+  - 224
+  test_split: 0.1
+  val_split: 0.2
+gradient_clip: true
+gradient_clip_value: 1.0
+loss:
+  name: dynamic
+  task_weights:
+    defects: 1.0
+    params: 1.0
+    quality: 1.0
+  temp: 2.0
+model:
+  backbone_name: vit_tiny_patch16_224
+  backbone_type: vit
+  freeze_layers: false
+  num_classes: 4
+  num_defect_types: 5
+  num_params: 4
+  pretrained: false
+  use_attention: false
+num_epochs: 1
+optimizer:
+  learning_rate: 0.001
+  momentum: 0.9
+  name: adamw
+  weight_decay: 0.0001
+output_dir: models/checkpoints_dev
+preprocessing:
+  denoise: false
+  normalize: false
+  roi_method: fixed
+  target_size:
+  - 224
+  - 224
+print_freq: 5
+save_freq: 1
+scheduler:
+  factor: 0.1
+  gamma: 0.1
+  name: cosine
+  patience: 3
+  step_size: 10
+  t_max: 10
+  verbose: true
+seed: 123
+use_amp: false
+use_gpu: false

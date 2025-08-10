@@ -410,11 +410,11 @@ class Trainer:
             with open(config_path, 'w') as f:
                 yaml.dump(self.config, f)
 
-def main():
+def main(argv=None):
     """主函数"""
     parser = argparse.ArgumentParser(description="训练3D打印质量评估模型")
     parser.add_argument('--config', type=str, required=True, help='配置文件路径')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     
     # 加载配置
     with open(args.config, 'r') as f:

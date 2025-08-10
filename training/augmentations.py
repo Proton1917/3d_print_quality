@@ -2,7 +2,7 @@ import numpy as np
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-def get_training_augmentations(target_size=(224, 224)):
+def get_train_transforms(target_size=(224, 224)):
     """
     获取训练数据增强变换
     
@@ -24,14 +24,14 @@ def get_training_augmentations(target_size=(224, 224)):
             A.HueSaturationValue(hue_shift_limit=10, sat_shift_limit=15, val_shift_limit=10, p=0.5),
         ], p=0.5),
         A.OneOf([
-            A.GaussNoise(var_limit=(10.0, 50.0), p=0.5),
+            A.GaussNoise(var_limit=(10, 50), p=0.5),
             A.GaussianBlur(blur_limit=(3, 7), p=0.5),
             A.MotionBlur(blur_limit=7, p=0.5),
         ], p=0.3),
         A.OneOf([
-            A.OpticalDistortion(distort_limit=0.05, shift_limit=0.05, p=0.5),
+            A.OpticalDistortion(distort_limit=0.05, p=0.5),
             A.GridDistortion(num_steps=5, distort_limit=0.05, p=0.5),
-            A.ElasticTransform(alpha=1, sigma=50, alpha_affine=50, p=0.5),
+            A.ElasticTransform(alpha=1, sigma=50, p=0.5),
         ], p=0.2),
         A.OneOf([
             A.CLAHE(clip_limit=2.0, p=0.5),
@@ -42,7 +42,7 @@ def get_training_augmentations(target_size=(224, 224)):
         ToTensorV2(),
     ])
 
-def get_validation_augmentations(target_size=(224, 224)):
+def get_test_transforms(target_size=(224, 224)):
     """
     获取验证/测试数据增强变换
     

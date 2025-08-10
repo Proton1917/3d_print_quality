@@ -6,9 +6,9 @@
 
 光固化3D打印技术在医疗器械、精密零件和定制化产品制造中得到广泛应用，但打印质量控制一直是行业面临的挑战。本项目旨在构建一个智能系统，通过分析每一层打印后的图像，实现：
 
-- 质量评估：自动将打印层质量分为优、良、中、差四个等级
-- 缺陷识别：检测并分类常见缺陷（气泡、表面不均、层分离、翘曲等）
-- 参数预测：反向推导生成该层所用的打印参数（层厚、曝光时间、强度、温度）
+- **质量评估**：自动将打印层质量分为优、良、中、差四个等级
+- **缺陷识别**：检测并分类常见缺陷（气泡、表面不均、层分离、翘曲等）
+- **参数预测**：反向推导生成该层所用的打印参数（层厚、曝光时间、强度、温度）
 
 ## 项目结构
 
@@ -36,18 +36,22 @@
 │   ├── losses.py         # 损失函数
 │   └── train.py          # 训练循环
 ├── utils/             # 工具函数
+│   ├── device.py      # 设备管理（MPS/CUDA支持）
 │   └── visualization.py  # 可视化工具
 ├── inference/         # 模型推理代码
 │   └── inference.py      # 推理函数
 ├── notebooks/         # Jupyter笔记本
 │   └── data_exploration.ipynb  # 数据探索与模型演示
 ├── configs/           # 配置文件
-│   └── default.yaml   # 默认配置
+│   ├── default.yaml   # 默认配置
+│   └── apple_silicon.yaml # Apple Silicon MPS配置
 ├── scripts/           # 脚本文件
 │   ├── evaluate_model.py  # 模型评估脚本
 │   ├── preprocess.py      # 数据预处理脚本
-│   └── train_model.py     # 模型训练脚本
+│   ├── train_model.py     # 模型训练脚本
+│   └── test_mps.py        # MPS测试脚本
 ├── requirements.txt   # 项目依赖
+├── LICENSE            # MIT许可证
 └── README.md          # 项目说明
 ```
 
@@ -63,14 +67,14 @@
 ### 2. 灵活的骨干网络选择
 
 支持两种主流的骨干网络架构：
-- ResNet系列：经典的卷积神经网络，计算效率高
-- Vision Transformer：基于自注意力机制，捕获全局依赖关系
+- **ResNet系列**：经典的卷积神经网络，计算效率高
+- **Vision Transformer**：基于自注意力机制，捕获全局依赖关系
 
 ### 3. 注意力增强特征提取
 
 集成多种注意力机制提升模型性能：
-- CBAM：结合通道注意力和空间注意力
-- 自注意力机制：优化特征间的相互关系
+- **CBAM**：结合通道注意力和空间注意力
+- **自注意力机制**：优化特征间的相互关系
 
 ### 4. 自适应任务平衡
 
@@ -83,13 +87,20 @@
 - 光学变换：亮度、对比度、色调调整
 - 噪声添加：高斯噪声、模糊等
 
+### 6. 多平台支持
+
+- **CUDA支持**：利用NVIDIA GPU加速训练
+- **Apple Silicon MPS支持**：在M1/M2 Mac上使用GPU加速
+- **CPU回退**：在没有GPU的环境中自动使用CPU
+
 ## 安装与环境配置
 
 ### 环境要求
 
-- Python 3.7+
-- PyTorch 1.12.0+
-- CUDA支持（推荐用于训练）
+- Python 3.12+
+- PyTorch 2.7.0+
+- CUDA支持（推荐用于训练）或Apple Silicon MPS
+- 所有依赖已在当前环境中验证可用
 
 ### 安装步骤
 
@@ -99,14 +110,24 @@ git clone <repository-url>
 cd 3d_print_quality
 ```
 
-2. 安装依赖
+2. 验证依赖（当前环境已包含所有必要依赖）
 ```bash
+# 可选：如果需要在新环境中安装
 pip install -r requirements.txt
 ```
 
-3. 准备数据
+3. 验证项目功能
+```bash
+# 测试设备支持
+python scripts/test_mps.py
+
+# 验证所有模块正常工作
+python -c "from models.model import PrintQualityModel; print('✅ 项目可用')"
+```
+
+4. 准备数据
    - 将原始图像放入 `data/raw` 目录
-   - 准备元数据CSV文件（格式参考 `data/metadata.csv`）
+   - 准备元数据CSV文件（格式参考 `data/数据收集指南.md`）
 
 ## 使用说明
 
@@ -123,7 +144,11 @@ python scripts/preprocess.py --config configs/default.yaml
 使用预处理后的数据训练模型：
 
 ```bash
+# 使用默认配置训练
 python scripts/train_model.py --config configs/default.yaml
+
+# 在Apple Silicon Mac上训练（使用MPS）
+python scripts/train_model.py --config configs/apple_silicon.yaml
 ```
 
 训练过程中，模型检查点和TensorBoard日志将保存到配置文件指定的输出目录。
@@ -152,19 +177,31 @@ python inference/inference.py --model_path models/checkpoints/best_model.pth --i
 python inference/inference.py --model_path models/checkpoints/best_model.pth --image_dir data/test_images --output_csv results.csv
 ```
 
-### 6. 配置文件说明
+### 6. 设备测试
 
-`configs/default.yaml` 包含模型、训练和数据处理的所有配置参数，可根据需要调整：
+测试当前系统支持的计算设备：
 
-- 数据配置：图像路径、批量大小、分割比例等
-- 模型配置：骨干网络类型、注意力模块使用等
-- 训练配置：优化器、学习率、训练周期等
+```bash
+python scripts/test_mps.py
+```
+
+## 配置文件说明
+
+项目提供了两个配置文件：
+
+- `configs/default.yaml`：默认配置，适用于CUDA GPU环境
+- `configs/apple_silicon.yaml`：专为Apple Silicon Mac优化的配置
+
+配置参数包括：
+- **数据配置**：图像路径、批量大小、分割比例等
+- **模型配置**：骨干网络类型、注意力模块使用等
+- **训练配置**：优化器、学习率、训练周期、设备选择等
 
 ## 数据要求与格式
 
 ### 元数据CSV文件格式
 
-元数据文件 `data/metadata.csv` 应包含以下字段：
+元数据文件应包含以下字段：
 - `image_id`：图像文件名（不含扩展名）
 - `layer_thickness`：层厚（毫米）
 - `exposure_time`：曝光时间（秒）
@@ -172,6 +209,8 @@ python inference/inference.py --model_path models/checkpoints/best_model.pth --i
 - `temperature`：打印温度（摄氏度）
 - `quality_score`：质量评分（0-1范围）
 - `defect_type`：缺陷类型（文本描述）
+
+详细的数据收集指南请参考 `data/数据收集指南.md`。
 
 ### 图像要求
 
@@ -211,7 +250,7 @@ jupyter notebook notebooks/data_exploration.ipynb
 
 ## 项目目标与性能
 
-我们的目标是建立一个可靠的质量评估系统，实现打印误差控制在2微米以内。当前系统在测试集上实现的性能指标：
+我们的目标是建立一个可靠的质量评估系统，实现打印误差控制在2微米以内。当前系统在测试集上的性能指标：
 
 - 质量分类准确率：> 90%
 - 缺陷检测准确率：> 85%
@@ -223,6 +262,7 @@ jupyter notebook notebooks/data_exploration.ipynb
 - 拓展支持更多种类的3D打印材料和工艺
 - 开发基于检测结果的自动参数矫正系统
 - 扩充数据集规模，进一步提高模型鲁棒性
+- 优化模型在不同硬件平台上的性能
 
 ## 贡献指南
 
@@ -231,6 +271,7 @@ jupyter notebook notebooks/data_exploration.ipynb
 - 改进文档和代码注释
 - 提供更多数据集和预训练模型
 - 开发新的骨干网络或注意力机制
+- 优化跨平台兼容性
 
 ## 许可证
 

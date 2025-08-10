@@ -17,14 +17,15 @@ class ResNetBackbone(nn.Module):
         super(ResNetBackbone, self).__init__()
         
         # 初始化模型
+        weights = 'DEFAULT' if pretrained else None
         if model_name == 'resnet18':
-            self.backbone = models.resnet18(pretrained=pretrained)
+            self.backbone = models.resnet18(weights=weights)
         elif model_name == 'resnet34':
-            self.backbone = models.resnet34(pretrained=pretrained)
+            self.backbone = models.resnet34(weights=weights)
         elif model_name == 'resnet50':
-            self.backbone = models.resnet50(pretrained=pretrained)
+            self.backbone = models.resnet50(weights=weights)
         elif model_name == 'resnet101':
-            self.backbone = models.resnet101(pretrained=pretrained)
+            self.backbone = models.resnet101(weights=weights)
         else:
             raise ValueError(f"不支持的模型名称: {model_name}")
         

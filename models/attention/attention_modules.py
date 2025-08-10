@@ -98,8 +98,8 @@ class SelfAttention(nn.Module):
         k = self.key(x)
         v = self.value(x)
         
-        # 计算注意力分数
-        scores = torch.matmul(q, k.transpose(-2, -1)) / (self.hidden_features  0.5)
+        # 计算注意力分数（缩放点积注意力）
+        scores = torch.matmul(q, k.transpose(-2, -1)) / (self.hidden_features ** 0.5)
         attn_weights = F.softmax(scores, dim=-1)
         
         # 应用注意力权重
